@@ -23,10 +23,10 @@ def search(text):
 
 # initialize the list of class labels MobileNet SSD was trained to
 # detect, then generate a set of bounding box colors for each class
-CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat",
-           "bottle", "bus", "car", "cat", "chair", "cow", "diningtable",
-           "dog", "horse", "motorbike", "human", "pottedplant", "sheep",
-           "couch", "train", "tv monitor"]
+CLASSES = ["background", "airplane", "bicycle", "bird", "boat",
+           "bottle", "bus", "car", "cat", "chair", "cow", "table",
+           "dog", "horse", "motorbike", "person", "potted plant", "sheep",
+           "couch", "train", "tv"]
 COLORS = np.random.uniform(0, 255, size=(len(CLASSES), 3))
 
 # load our serialized model from disk
@@ -48,7 +48,7 @@ while True:
     # grab the frame from the threaded video stream and resize it
     # to have a maximum width of 400 pixels
     frame = vs.read()
-    frame = imutils.resize(frame, width=400)
+    frame = imutils.resize(frame, width=900)
 
     # grab the frame dimensions and convert it to a blob
     (h, w) = frame.shape[:2]
@@ -79,40 +79,29 @@ while True:
             (startX, startY, endX, endY) = box.astype("int")
 
             # draw the prediction on the frame
-            label = "{}: {:.2f}%".format(CLASSES[idx],
-                                         confidence * 100)
-
+            label = f"{CLASSES[idx]}: {round(confidence * 100, 2)}%"
             # describe object
-            text = "{}".format(search(CLASSES[idx]))
-
-            # cv2.rectangle(frame, (startX, startY), (endX, endY),
-                          # COLORS[idx], 1)
-
-            # cv2.rectangle(frame, (startX, startY), (endX + 20, endY + 20),
-            #               (0, 0, 0), 1)
+            text = f"{search(CLASSES[idx])}"
 
             y = startY - 15 if startY - 15 > 15 else startY + 15
             cv2.putText(frame, label, (startX, y),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
 
+            # code for making the returned definition "pretty" on screen
             split_text = text.split()
             new_line = ""
-            i = 0
-            count = 0
-            max_word_length = 2
-            for word in split_text:
-                new_line += word + " "
-                if count == max_word_length:
+            max_word_length = 3
+            for i in range(len(split_text)):
+                new_line += split_text.pop(0) + " "
+                if len(new_line.split()) == max_word_length:
                     cv2.putText(frame, new_line, (startX, y + 30 + (15 * i)),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 200))
-                    i += 1
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 200))
                     new_line = ""
-                    count = 0
-                count += 1
 
-                if i * max_word_length == len(split_text):
-                    cv2.putText(frame, " ".join(split_text[(i * max_word_length):]), (startX, y + 30 + (15 * i)),
+                if len(split_text) < max_word_length:
+                    cv2.putText(frame, " ".join(split_text[:]), (startX, y + 30 + (15 * i)),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200, 0, 0), 2)
+                    break
 
     # show the output frame
     frame = imutils.resize(frame, width=900)
